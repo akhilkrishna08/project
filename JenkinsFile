@@ -1,0 +1,29 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_IMAGE = "flask-app-devops"
+    }
+
+    stages {
+        stage('Fetch Code') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} ."
+            }
+        }
+        stage('Deploy Container') {
+            steps {
+                // Remove existing container if it's running
+                sh "docker stop flask-container || true"
+                sh "docker rm flask-container || true"
+                // Run the new container
+                sh "docker run -d -p 8080:5000 --name flask-container ${DOCKER_IMAGE}:${BUILD_NUMBER}"
+            }
+        }
+    }
+}
